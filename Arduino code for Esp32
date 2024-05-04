@@ -1,0 +1,52 @@
+#include <Wire.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#include <LiquidCrystal_I2C.h>
+
+#define LED_PIN 12
+#define BUZZER_PIN 12
+#define TEMPERATURE_SENSOR_PIN 27  // Pin connected to the DS18B20 data line
+#define FIRE_THRESHOLD 50
+
+LiquidCrystal_I2C lcd(0x27, 16, 2);  // Address, columns, rows
+OneWire oneWire(TEMPERATURE_SENSOR_PIN);
+DallasTemperature sensors(&oneWire);
+
+void setup() {
+  Serial.begin(9600); // Initialize serial communication
+  pinMode(LED_PIN, OUTPUT);
+  pinMode(BUZZER_PIN, OUTPUT);
+  lcd.init();  // Initialize the LCD
+  lcd.backlight();  // Turn on the backlight
+  Wire.begin(21, 22); // Initialize hardware I2C with SDA pin 21 and SCL pin 22
+  sensors.begin();
+}
+
+void loop() {
+  // Request temperature reading
+  sensors.requestTemperatures();
+  float temperature = sensors.getTempCByIndex(0);
+
+  // Display temperature on LCD
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Temp: ");
+  lcd.print(temperature);
+  lcd.print(" C");
+
+  // Send temperature reading over serial
+  Serial.println(temperature);
+
+  // Check if temperature exceeds threshold
+  if (temperature > FIRE_THRESHOLD) {
+    // Trigger buzzer
+    digitalWrite(BUZZER_PIN, HIGH);
+    delay(1000);  // Buzzer on for 1 second
+    digitalWrite(BUZZER_PIN, LOW);
+
+    // You can add more actions here, such as taking a picture with the camera
+  }
+
+  // Delay before next reading
+  delay(1000); // Adjust the interval based on your requirement
+}

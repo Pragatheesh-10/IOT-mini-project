@@ -1,0 +1,40 @@
+import cv2
+
+camera = cv2.VideoCapture(0)  # 0 for default camera, change to another number if multiple cameras are available
+
+while True:
+    ret, frame = camera.read()  # Read a frame from the camera
+
+    # Convert the frame to HSV color space
+    hsv_frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+
+    # Define the lower and upper bounds of the red color in HSV
+    lower_red = (0, 50, 50)
+    upper_red = (10, 255, 255)
+
+    # Threshold the HSV frame to get only red colors
+    mask = cv2.inRange(hsv_frame, lower_red, upper_red)
+
+    # Find contours in the mask
+    contours, _ = cv2.findContours(mask, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+    # Check if any contour representing fire is found
+    fire_detected = False
+    for contour in contours:
+        area = cv2.contourArea(contour)
+        if area > 1000:  # Adjust this value based on your setup
+            fire_detected = True
+            break
+
+    # Display "Fire detected" if fire is detected
+    if fire_detected:
+        print("Fire detected!")
+
+    cv2.imshow('Frame', frame)  # Display the frame in a window named 'Frame'
+
+    # Check for the 'q' key to exit the loop
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+camera.release()  # Release the camera
+cv2.destroyAllWindows()  # Close all OpenCV windows
